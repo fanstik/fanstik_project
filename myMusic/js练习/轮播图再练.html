@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./轮播图再练.css">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="../项目/ajax.js"></script>
+    <script src="http://localhost:3000"></script>
+
+</head>
+
+<body>
+    <div class="swipe">
+        <!-- 图片显示 -->
+        <div class="img_box">
+            <!-- <a href="#" class="swipe_link" >
+                    <img src="../images/cbg-launch-nova.jpg" alt="" class="img" >
+                </a> -->
+        </div>
+        <!-- 指示点 -->
+        <div class="select">
+            <!-- <a href="#" class="item checked"></a>
+                <a href="#" class="item"></a>
+                <a href="#" class="item"></a> -->
+        </div>
+        <!-- 左侧翻页按钮 -->
+        <div class="btn left">
+            <!-- 字体图标：左箭头 -->
+            <i class="fa fa-angle-left" aria-hidden="true"></i>
+        </div>
+        <!-- 右侧翻页按钮 -->
+        <div class="btn right">
+            <!-- 字体图标：右箭头 -->
+            <i class="fa fa-angle-right" aria-hidden="true"></i>
+        </div>
+
+    </div>
+
+    <script>
+
+        window.onload = function () {
+            // 当前轮播图编号
+            let current_index = -1;
+            // 自动轮播定时器
+            let swipe_timer = null;
+
+            // 需要操作到的元素
+            let swipe = document.querySelector('.swipe')
+            let swipe_img_box = document.querySelector('.img_box')
+            let swipe_select = document.querySelector('.select');
+            let swipe_btn_left = document.querySelector('.left');
+            let swipe_btn_right = document.querySelector('.right');
+
+            // 获取图片地址
+            getajax('http://localhost:3000/banner')
+                .then((p1) => {
+                    // console.log(p1.banners);
+                    // 轮播图的图片地址与跳转链接
+                    let arr1 = p1.banners;
+                    // console.log(arr1.length);
+                    swipe_img_box.innerHTML = arr1.map((v) => {
+                        // console.log(v.imageUrl);
+                        return `
+                                <a href="#" class="swipe_link" >
+                                    <img src="${v.imageUrl}" alt="" class=".swipe_img"">
+                                </a>
+                                `
+                        let swipe_link = document.querySelector('.swipe_link');
+                        let swipe_img = document.querySelector('.swipe_img');
+                    }).join('')
+
+                    let swipe_link = document.querySelector('.swipe_link');
+                    let swipe_img = document.querySelector('.swipe_img');
+
+                    for (let i = 0; i < arr1.length; i++) {
+                        // 创建a元素
+                        let item = document.createElement('a');
+                        // 修改属性
+                        item.setAttribute('class', 'item');
+                        item.setAttribute('href', '#');
+                        item.setAttribute('data-index', i);
+                        // 追加元素
+                        swipe_select.appendChild(item);
+                    }
+
+                    // 播放
+                    let play = () => {
+                        // 3秒切换一次
+                        swipe_timer = setInterval(() => {
+                            // 设置新的index
+                            let index = current_index + 1;
+                            // 右翻越界，切到第一张
+                            if (index >= arr1.length) {
+                                index = 0;
+                            }
+                            // 加载新图片（这里选择自动，增加切换效果）
+                            autoSelect(index);
+                        }, 3000);
+                    };
+
+                    // 停止
+                    let stop = () => {
+                        if (swipe_timer) {
+                            clearInterval(swipe_timer);
+                            swipe_timer = null;
+                        }
+                    };
+
+                    // 绑定
+                    let bind = () => {
+                        // 左翻事件监听
+                        swipe_btn_left.addEventListener('click', () => {
+                            // 设置新的index
+                            let index = current_index - 1;
+                            // 左翻越界，切到最后一张
+                            if (index < 0) {
+                                index = arr1.length - 1;
+                            }
+                            // 加载新图片
+                            select(index);
+                        });
+                        // 右翻事件监听
+                        swipe_btn_right.addEventListener('click', () => {
+                            // 设置新的index
+                            let index = current_index + 1;
+                            // 右翻越界，切到第一张
+                            if (index >= arr1.length) {
+                                index = 0;
+                            }
+                            // 加载新图片
+                            select(index);
+                        });
+                        // 循环绑定指示器点击事件
+                        for (const key in swipe_select.children) {
+                            if (swipe_select.children.hasOwnProperty(key)) {
+                                const element = swipe_select.children[key];
+                                element.addEventListener('click', (e) => {
+                                    // 取消默认点击跳转
+                                    e.preventDefault();
+                                    // 跳转到当前指示点中data-index所指定的图片
+                                    select(e.target.dataset.index);
+                                });
+                            }
+                        }
+                        // 绑定鼠标移入事件
+                        swipe.addEventListener('mouseover', (e) => {
+                            // 防止鼠标从子元素移出时触发
+                            if (e.relatedTarget && swipe.compareDocumentPosition(e.relatedTarget) == 10) {
+                                stop();
+                            }
+                        });
+                        // 绑定鼠标移出事件
+                        swipe.addEventListener('mouseout', (e) => {
+                            // 防止鼠标从子元素移出时触发
+                            if (e.relatedTarget && swipe.compareDocumentPosition(e.relatedTarget) == 10) {
+                                play();
+                            }
+                        });
+                        // 绑定鼠标移动事件
+                        swipe.addEventListener('mousemove', (e) => {
+                            stop();
+                        });
+                    };
+
+                    // 默认第一张
+                    select(0);
+                    // 绑定各个事件并开始轮播
+                    bind();
+                    play();
+                    autoSelect();
+                })
+
+
+        }
+
+    </script>
+</body>
+
+</html>
+
+<script>
+
+</script>
