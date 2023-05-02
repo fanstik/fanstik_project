@@ -1,1 +1,0 @@
-# fanstik_project
